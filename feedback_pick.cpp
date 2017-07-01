@@ -26,6 +26,7 @@
 #include <GL/glut.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
 #define WIDTH  300
 #define HEIGHT  300
@@ -156,13 +157,16 @@ float returnDepth(int x, int y){
 void  CalculateWorldCo(int x, int y, float depth, double &wx, double &wy,double &wz){
   GLdouble mvMatrix[16],pjMatrix[16];
   GLint viewport[4];
+  float z;
+  glReadPixels(x,y,1,1,GL_DEPTH_COMPONENT,GL_FLOAT,&z);
+  std::cout << "z:"<<z<<"depth:"<<depth<<std::endl;
 
   //ビューポートパラメータを取得する．
   glGetIntegerv(GL_VIEWPORT, viewport);
   glGetDoublev(GL_MODELVIEW_MATRIX, mvMatrix);
   glGetDoublev(GL_PROJECTION_MATRIX, pjMatrix);
   //世界座標を取得する
-  gluUnProject((double)x,(double)viewport[3]-y,depth,
+  gluUnProject((double)x,(double)viewport[3]-y,z,
     mvMatrix,
     pjMatrix,
     viewport,
