@@ -21,6 +21,7 @@
 #include <vector>
 #include <GL/glut.h>
 #include <GLUI/glui.h>
+#include "stress_circle.hpp"
 #define pb push_back
 #define mp make_pair
 #define fst first
@@ -33,11 +34,7 @@
 using namespace std;
 
 static const int Buf = 512;
-static const int CircleDivisionNum = 50;
-static const double ObjSize = 1.0;
 
-double object_position[3] = {0.0, 0.0, 0.0};
-double handle_position[3] = {0.0, 0.0, 0.0};
 double handlePos[2][4] = {
   {0.1,-0.1,-0.1, 0.1},
   {0.1, 0.1,-0.1,-0.1}
@@ -52,11 +49,11 @@ unsigned int object_number = 0;
 double object_depth = -1;
 bool move_flag = 0;
 
-/**
- * Draw two circles.
- * @param mode OpenGL matrix mode.
- */
-void drawCircle(GLenum mode);
+GLUI_EditText *sigma_x_box, *sigma_y_box, *tau_box;
+struct StressCircle stressCircle;
+
+void drawAxis(void);
+void drawHandle(GLenum mode);
 /**
  * Process mouse picking.
  * @param x mouse x coordination
@@ -115,9 +112,15 @@ int main(int argc, char** argv) {
   glutMotionFunc(dragObject);
   GLUI_Master.set_glutReshapeFunc(reshape);
   GLUI_Master.set_glutIdleFunc(idle);
-  GLUI *glui = GLUI_Master.create_glui_subwindow(main_window, GLUI_SUBWINDOW_BOTTOM);
-  glui->set_main_gfx_window(main_window);
-  glui->add_button("Exit", 0, gluiExit);
+  GLUI glui = *(GLUI_Master.create_glui_subwindow(main_window, GLUI_SUBWINDOW_BOTTOM));
+  glui.set_main_gfx_window(main_window);
+  sigma_x_box = glui.add_edittext("sigma_x", GLUI_EDITTEXT_FLOAT, &stressCircle.sigma_x, 1);
+  glui.add_column(true);
+  sigma_y_box = glui.add_edittext("sigma_y", GLUI_EDITTEXT_FLOAT, &stressCircle.sigma_y, 2);
+  glui.add_column(true);
+  tau_box = glui.add_edittext("tau", GLUI_EDITTEXT_FLOAT, &stressCircle.tau, 3);
+  glui.add_column(true);
+  glui.add_button("Exit", 0, gluiExit);
   glClearColor (0.3, 0.3, 0.3, 0.0); // set clear color
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
@@ -127,28 +130,12 @@ int main(int argc, char** argv) {
   return EXIT_SUCCESS;
 }
 
-void drawCircle() {
-  glColor3f(0, 0, 1.0);
-  glBegin(GL_LINES);
-  for (int j = 0; j <= CircleDivisionNum; ++j) {
-    double theta = 2.0 * M_PI * j / CircleDivisionNum;
-    double x = ObjSize * cos(theta) + object_position[0];
-    double y = ObjSize * sin(theta) + object_position[1];
-    glVertex3d(x, y, object_position[2]);
-    theta = 2.0 * M_PI * (j+1) / CircleDivisionNum;
-    x = ObjSize * cos(theta) + object_position[0];
-    y = ObjSize * sin(theta) + object_position[1];
-    glVertex3d(x, y, object_position[2]);
-  }
-  glEnd();
-}
-
 void drawHandle(GLenum mode) {
   if(mode == GL_SELECT) { glLoadName(1); }
   glColor3f(1.0, 0.0, 0.0);
   glBegin(GL_QUADS);
   for(int i = 0; i < 4; ++i) {
-    glVertex3d(handle_position[0] + handlePos[0][i], handle_position[1] + handlePos[1][i], 0.0);
+    glVertex2d(stressCircle.sigma_x + handlePos[0][i], stressCircle.tau + handlePos[1][i]);
   }
   glEnd();
   if(mode == GL_SELECT) { glLoadName(2); }
@@ -156,31 +143,31 @@ void drawHandle(GLenum mode) {
   glColor3f(0.0, 0.0, 1.0);
   glBegin(GL_QUADS);
   for(int i = 0; i < 4; ++i) {
-    glVertex3d(handle_position[0] + handlePos[0][i] + 1.0, handle_position[1] + handlePos[1][i] + 1.0, 0.0);
+    glVertex2d(stressCircle.sigma_y + handlePos[0][i], -stressCircle.tau + handlePos[1][i]);
   }
   glEnd();
   glFlush();
 }
 
 void drawAxis(void) {
-  GLdouble axis[][3] = {
+  double axis[][3] = {
     {-5.0, 0.0, 0.0 },
     { 5.0, 0.0, 0.0 },
     { 0.0,-5.0, 0.0 },
     { 0.0, 5.0, 0.0 }
   };
-  glBegin(GL_LINES);
   for(int i = 0; i < 2; ++i) {
-      glColor3dv(axis[2 * i + 1]);
-      glVertex3dv(axis[2 * i]);
-      glVertex3dv(axis[2 * i + 1]);
+    glBegin(GL_LINES);
+    glColor3dv(axis[2 * i + 1]);
+    glVertex3dv(axis[2 * i]);
+    glVertex3dv(axis[2 * i + 1]);
+    glEnd();
   }
-  glEnd();
 }
 
 void pickMouse(int x, int y) {
-  GLuint selectBuf[Buf] = {0};
-  GLint hits, viewport[4];
+  unsigned int selectBuf[Buf] = {0};
+  int hits, viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
   glSelectBuffer(Buf, selectBuf);
   glRenderMode(GL_SELECT);
@@ -214,16 +201,12 @@ void pickMouse(int x, int y) {
   }
 }
 
-void calcWorldCoordination(int x, int y, double depth, double &wx, double &wy,double &wz) {
-
-}
-
 void display(void) {
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear frame buffer
   glEnable(GL_DEPTH_TEST);
   glLoadIdentity();
   gluLookAt(0.0, 0.0, 5.0, 0, 0, 0, 0.0, 1.0, 0.0);
-  drawCircle();
+  stressCircle.draw();
   drawHandle(GL_RENDER);
   drawAxis();
   glFlush();
@@ -238,8 +221,16 @@ void dragObject(int x, int y) {
   glGetDoublev(GL_MODELVIEW_MATRIX, mvMatrix);
   glGetDoublev(GL_PROJECTION_MATRIX, pjMatrix);
   gluUnProject(x, height - y, object_depth/2, mvMatrix, pjMatrix, viewport, &xx[0], &xx[1], &xx[2]);
-  handle_position[0] = xx[0];
-  handle_position[1] = xx[1];
+  if(object_number == 1) {
+    stressCircle.update(xx[0], stressCircle.sigma_y, xx[1]);
+    sigma_x_box->set_float_val(stressCircle.sigma_x);
+    tau_box->set_float_val(stressCircle.tau);
+  }
+  else if(object_number == 2) {
+    stressCircle.update(stressCircle.sigma_x, xx[0], -xx[1]);
+    sigma_y_box->set_float_val(stressCircle.sigma_y);
+    tau_box->set_float_val(stressCircle.tau);
+  }
 }
 
 void reshape (int w, int h) {
