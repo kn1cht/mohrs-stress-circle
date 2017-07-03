@@ -60,7 +60,7 @@ static GLuint  move_flag = 0;
 
 void drawCircle(GLenum mode){
   for (int i=0 ; i < ObjNum; ++i) {
-    if(mode == GL_SELECT){ glPushName(i+1); }
+    if(mode == GL_SELECT){ glLoadName(i+1); }
     glColor3f(0, 0, 1.0);
     glBegin(GL_POLYGON);
     for (int j = 0; j < CircleDivisionNum; ++j) {
@@ -80,17 +80,18 @@ void drawCircle(GLenum mode){
  * @param y mouse y coordination
  */
 void pick(int x, int y){
-  GLuint selectBuf[Buf] = {0};
   GLint hits, viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
+  GLuint selectBuf[Buf];
   glSelectBuffer(Buf, selectBuf);
-  (void) glRenderMode(GL_SELECT);
+  glRenderMode(GL_SELECT);
   glInitNames();
-  glPushName(0);
+  glPushName(-1);
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
     glLoadIdentity();
-    gluPickMatrix(x, viewport[3] - y, 5.0, 5.0, viewport);
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    gluPickMatrix(x, viewport[3] - y, 1.0, 1.0, viewport);
     gluPerspective( 60.0, aspect, 1.0, 20.0 );
     glMatrixMode(GL_MODELVIEW);
     drawCircle(GL_SELECT); // render with selection mode
@@ -124,7 +125,7 @@ void pick(int x, int y){
  * @param &wy world y coordination
  * @param &wz world z coordination
  */
-void  calcWorldCoordination(int x, int y, double depth, double &wx, double &wy,double &wz){
+void calcWorldCoordination(int x, int y, double depth, double &wx, double &wy,double &wz){
   GLdouble mvMatrix[16],pjMatrix[16];
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
@@ -134,7 +135,6 @@ void  calcWorldCoordination(int x, int y, double depth, double &wx, double &wy,d
                mvMatrix, pjMatrix, viewport,
                &wx, &wy, &wz);
 }
-
 
 /**
  * Render new image.

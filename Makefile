@@ -1,19 +1,19 @@
 CC = g++ --std=c++11 -Wall
-FLAGS = -Wno-deprecated-declarations
+CFLAGS = -Wno-deprecated-declarations
 LIBGLUI = -framework GLUI
 LIBGLUT= -framework GLUT 
 LIBGL= -framework OpenGL
 
-all: main feedback_pick
+all: main feedback_pick drag
 
 main: main.cpp
-	${CC} -o main main.cpp ${FLAGS} ${LIBGLUI} ${LIBGLUT} ${LIBGL} ${LIBS}
+	${CC} -o $@  $^ ${CFLAGS} ${LIBGLUI} ${LIBGLUT} ${LIBGL}
 
 feedback_pick: feedback_pick.cpp
-	${CC} -o feedback_pick feedback_pick.cpp${FLAGS} ${LIBGLUI} ${LIBGLUT} ${LIBGL} ${LIBS}
+	${CC} -o $@  $^ ${CFLAGS} ${LIBGLUI} ${LIBGLUT} ${LIBGL}
 
 drag: drag.cpp
-	${CC} -o drag drag.cpp${FLAGS} ${LIBGLUI} ${LIBGLUT} ${LIBGL} ${LIBS}
+	${CC} -o $@  $^ ${CFLAGS} ${LIBGLUI} ${LIBGLUT} ${LIBGL}
 
 clean:
 	rm main feedback_pick drag
