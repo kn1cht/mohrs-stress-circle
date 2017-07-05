@@ -1,0 +1,17 @@
+# http://adrai.github.io/flowchart.js/
+
+st=>start: main()
+e=>end
+init=>operation: GLUT初期化
+ウィンドウ生成
+gluiInit=>subroutine: GLUI初期化: gluiInit()
+- コールバック登録
+- サブウィンドウ生成
+- 各UI生成(Live variables登録)
+color=>operation: クリア色/デプス初期化
+display=>subroutine: 初期描画: display()
+glutMainLoop=>subroutine: メインループ: glutMainLoop()
+cond=>condition: Yes or No?
+io=>inputoutput: catch
+op2=>operation: Operation
+st->init->gluiInit->color->display->glutMainLoop->glutMainLoop

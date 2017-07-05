@@ -1,0 +1,36 @@
+#display()
+Note  over display(): バッファ・変換行列・カメラ初期化\ndrawAxis() (軸描画)
+display()->StressCircle: updateVal()
+Note over StressCircle: 現在の応力値から表示する数値を計算
+StressCircle-->display(): 
+display()->StressCircle: drawCircle()
+Note over StressCircle: 応力円描画/主応力の点描画
+StressCircle-->display(): 
+display()->StressCircle: drawHandles(GL_RENDER)
+Note over StressCircle: 応力値変更用要素描画\n(x軸ハンドル/y軸ハンドル/角度ハンドル)
+StressCircle-->display(): 
+Note over display(): glFlush()\nglutSwapBuffers()
+
+# mouse(int button, int state, int x, int y)
+Note right of mouse(): [ボタン押下]
+Note right of mouse(): [ボタン押上]
+# TODO
+
+# motion(int x, int y)
+motion()->StressCircle: dragHandle(x, y)
+Note over StressCircle: ウィンドウ座標をワールド座標に変換
+Note right of StressCircle: [x軸ハンドル]
+StressCircle->StressCircle: updateStress() (σ_x,τ更新)
+Note right of StressCircle: [y軸ハンドル]
+StressCircle->StressCircle: updateStress() (σ_y,τ更新)
+Note right of StressCircle: [角度ハンドル]
+StressCircle->StressCircle: updateStress() (σ_x,σ_y,τ算出及び更新)
+StressCircle-->motion():
+motion()->GLUI: sync_live()
+Note over GLUI: Live variables更新
+GLUI-->motion():
+
+# reshape (int w, int h)
+# idle()
+# gluiInit()
+# gruiReset(int num)
