@@ -19,7 +19,6 @@ GLUI_EditText *angle_box, *sigma_1_box, *sigma_2_box, *tau_max_box;
 struct StressCircle stressCircle(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 void drawAxis();
-void drawString();
 void display();
 void motion(int x, int y);
 void reshape (int w, int h);
